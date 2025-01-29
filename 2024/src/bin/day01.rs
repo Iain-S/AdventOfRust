@@ -2,7 +2,10 @@ mod utils;
 
 fn main() {
     let input = utils::problem_input("01");
-    println!("Total distance: {}", part_one(input));
+    println!("Part 1: {}", part_one(input));
+
+    let input = utils::problem_input("01");
+    println!("Part 2: {}", part_two(input));
 }
 
 pub fn add(left: usize, right: usize) -> usize {
@@ -14,7 +17,10 @@ fn split_line(s: String) -> (u32, u32) {
     if vector.len() != 2 {
         panic!("Expected two numbers, got {}", vector.len());
     }
-    return (vector[0].parse::<u32>().unwrap(), vector[1].parse::<u32>().unwrap());
+    return (
+        vector[0].parse::<u32>().unwrap(),
+        vector[1].parse::<u32>().unwrap(),
+    );
 }
 
 fn part_one(s: String) -> u32 {
@@ -35,17 +41,45 @@ fn part_one(s: String) -> u32 {
         let (l, r) = split_line(line.to_string());
         left.push(l);
         right.push(r);
-    } 
+    }
 
     // Sort the vectors
     left.sort();
     right.sort();
 
     // Calculate the distance between each pair of numbers
-    let result = left.iter().zip(right.iter()).map(|(l, r)| if r > l {r - l} else {l - r});
+    let zip = left.iter().zip(right.iter());
+    let result = zip.map(|(l, r)| if r > l { r - l } else { l - r });
 
     // Sum the result
     return result.sum();
+}
+
+fn part_two(s: String) -> u32 {
+    let mut left = Vec::new();
+    let mut right = Vec::new();
+
+    // Split the input into two vectors
+    for line in s.split("\n") {
+        if line == "" {
+            continue;
+        }
+        let (l, r) = split_line(line.to_string());
+        left.push(l);
+        right.push(r);
+    }
+
+    let mut result = 0;
+    for l in left {
+        let mut x = 0;
+        for r in right.clone() {
+            if r == l {
+                x += 1;
+            }
+        }
+        result += l * x;
+    }
+    return result;
 }
 
 #[cfg(test)]
@@ -66,13 +100,14 @@ mod tests {
     }
 
     #[test]
-    fn test_total_distance() {
-        let result = total_distance(utils::example_input("01"));
-        assert_eq!(result, 6);
-    }
-
-    #[test]
     fn test_part_one() {
         let result = part_one(example_input("01"));
         assert_eq!(result, 11);
-    }}
+    }
+
+    #[test]
+    fn test_part_two() {
+        let result = part_two(example_input("01"));
+        assert_eq!(result, 31);
+    }
+}
