@@ -54,11 +54,10 @@ fn part_one(s: String) -> u32 {
 fn part_two(s: String) -> u32 {
     fn inner(ss: &str) -> u32 {
         let levels = ss.split_whitespace().map(|x| x.parse().unwrap()).collect();
-        let safe = is_safe_deux(levels);
-        if safe {
-            return 1;
+        match is_safe_deux(levels) {
+            true => 1,
+            false => 0,
         }
-        0
     }
     let temp: Vec<u32> = s.lines().map(inner).collect();
     temp.iter().sum()

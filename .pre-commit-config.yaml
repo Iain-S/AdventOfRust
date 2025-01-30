@@ -19,3 +19,9 @@ repos:
         language: system
         types: ['rust']
         pass_filenames: false
+      - id: test
+        name: Cargo Test
+        entry: cargo test --bins --manifest-path 2024/Cargo.toml
+        language: system
+        types: ['rust']
+        pass_filenames: false
