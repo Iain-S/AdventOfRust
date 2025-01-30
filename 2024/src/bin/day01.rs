@@ -17,10 +17,10 @@ fn split_line(s: String) -> (u32, u32) {
     if vector.len() != 2 {
         panic!("Expected two numbers, got {}", vector.len());
     }
-    return (
+    (
         vector[0].parse::<u32>().unwrap(),
         vector[1].parse::<u32>().unwrap(),
-    );
+    )
 }
 
 fn part_one(s: String) -> u32 {
@@ -34,8 +34,8 @@ fn part_one(s: String) -> u32 {
     let mut right = Vec::new();
 
     // Split the input into two vectors
-    for line in s.split("\n") {
-        if line == "" {
+    for line in s.split('\n') {
+        if line.is_empty() {
             continue;
         }
         let (l, r) = split_line(line.to_string());
@@ -52,7 +52,7 @@ fn part_one(s: String) -> u32 {
     let result = zip.map(|(l, r)| if r > l { r - l } else { l - r });
 
     // Sum the result
-    return result.sum();
+    result.sum()
 }
 
 fn part_two(s: String) -> u32 {
@@ -79,7 +79,7 @@ fn part_two(s: String) -> u32 {
         }
         result += l * x;
     }
-    return result;
+    result
 }
 
 #[cfg(test)]
