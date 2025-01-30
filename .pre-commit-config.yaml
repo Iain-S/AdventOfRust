@@ -25,3 +25,9 @@ repos:
         language: system
         types: ['rust']
         pass_filenames: false
+      - id: clippy
+        name: Cargo Clippy
+        entry: cargo clippy --manifest-path 2024/Cargo.toml
+        language: system
+        types: ['rust']
+        pass_filenames: false

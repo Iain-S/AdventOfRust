@@ -1,5 +1,3 @@
-use std::vec;
-
 mod utils;
 
 fn main() {
@@ -24,7 +22,6 @@ fn is_safe(levels: Vec<i32>) -> bool {
     all_neg || all_pos
 }
 
-/// Rewrite is_safe to use more idiomatic Rust.
 fn is_safe_deux(levels: Vec<i32>) -> bool {
     for i in 0..levels.len() {
         let mut myvec = levels[..i].to_vec();
@@ -93,7 +90,7 @@ mod tests {
         assert_eq!(true, is_safe_deux(vec![8, 6, 4, 4, 1]));
         assert_eq!(true, is_safe_deux(vec![1, 3, 6, 7, 9]));
 
-        //
+        // Check that our range selection doesn't break.
         assert_eq!(true, is_safe_deux(vec![1, 3, 6, 7, 6]));
     }
 
