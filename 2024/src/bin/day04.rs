@@ -10,7 +10,7 @@ fn main() {
 }
 
 // Rotate the matrix 90 degrees clockwise, so that we can check the columns.
-fn rotate_90(cw: &Vec<Vec<char>>) -> Vec<Vec<char>> {
+fn rotate_90(cw: &[Vec<char>]) -> Vec<Vec<char>> {
     let mut ccw = vec![vec![' '; cw.len()]; cw[0].len()];
     for i in 0..cw.len() {
         for j in 0..cw[0].len() {
@@ -21,44 +21,44 @@ fn rotate_90(cw: &Vec<Vec<char>>) -> Vec<Vec<char>> {
 }
 
 // Rotate the matrix 45 degrees clockwise, so that we can check the diagonals.
-fn rotate_45(cw: &Vec<Vec<char>>) -> Vec<Vec<char>> {
-    // starting at the last row, iterate across the columns, from col 1 (not 0) going up and right at 45 degrees
+fn rotate_45(cw: &[Vec<char>]) -> Vec<Vec<char>> {
     let mut ccw = Vec::new();
 
     // starting at the first col, iterate down the rows, going up and right at 45 degrees
     for i in 0..cw.len() {
-        let mut x = i;
-        let mut y = 0;
-        let mut cccw = Vec::new();
-        cccw.push(cw[x][y]);
+        let mut x = i; // rows 0 to n
+        let mut y = 0; // first column
+        let mut diagonal = Vec::new();
+        diagonal.push(cw[x][y]);
         while x > 0 && y < cw[0].len() - 1 {
-            x -= 1;
-            y += 1;
-            cccw.push(cw[x][y]);
+            x -= 1;  // up
+            y += 1;  // right
+            diagonal.push(cw[x][y]);
         }
-        ccw.push(cccw);
+        ccw.push(diagonal);
     }
 
+    // starting at the last row, iterate across the columns, from col 1 (not 0) going up and right at 45 degrees
     for j in 1..cw[0].len() {
-        let mut x = cw.len() - 1;
-        let mut y = j;
-        let mut cccw = Vec::new();
-        cccw.push(cw[x][y]);
+        let mut x = cw.len() - 1;  // last row
+        let mut y = j;  // columns 1 to n
+        let mut diagonal = Vec::new();
+        diagonal.push(cw[x][y]);
         while x > 0 && y < cw[0].len() - 1 {
-            x -= 1;
-            y += 1;
-            cccw.push(cw[x][y]);
+            x -= 1;  // up
+            y += 1;  // right
+            diagonal.push(cw[x][y]);
         }
-        ccw.push(cccw);
+        ccw.push(diagonal);
     }
 
     ccw
 }
 
-fn part_one(s: &String) -> usize {
+fn part_one(s: &str) -> usize {
     let mut cw = s
         .lines()
-        .map(|l| l.chars().collect::<Vec<char>>())
+        .map(|l| l.chars().collect())
         .collect::<Vec<Vec<char>>>();
     let mut xmases = 0;
     for _ in 0..4 {
@@ -77,7 +77,7 @@ fn part_one(s: &String) -> usize {
     xmases
 }
 
-fn part_two(s: &String) -> u32 {
+fn part_two(s: &str) -> u32 {
     2
 }
 
