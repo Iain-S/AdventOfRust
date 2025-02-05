@@ -8,11 +8,11 @@ fn main() {
     println!("Part 2: {}", part_two(input));
 }
 
-fn part_one(s: String) -> u32 {
+fn part_one(s: &str) -> u32 {
     1
 }
 
-fn part_two(s: String) -> u32 {
+fn part_two(s: &str) -> u32 {
     2
 }
 
