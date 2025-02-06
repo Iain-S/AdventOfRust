@@ -66,6 +66,27 @@ pub(crate) fn rotate_45(cw: &[Vec<char>]) -> Vec<Vec<char>> {
     ccw
 }
 
+struct Array2D<T> {
+    data: Vec<Vec<T>>,
+}
+
+impl<T> Array2D<T> {
+    fn default(rows: usize, cols: usize) -> Self
+    where
+        T: Default + Clone,
+    {
+        let mut data = Vec::new();
+        for _ in 0..rows {
+            let mut row = Vec::new();
+            for _ in 0..cols {
+                row.push(T::default());
+            }
+            data.push(row);
+        }
+        Array2D { data }
+    }
+}
+
 #[allow(dead_code)]
 fn main() {}
 
@@ -92,5 +113,14 @@ mod tests {
     fn test_rotate_45_two() {
         let orig = vec![vec!['a'], vec!['d']];
         assert_eq!(rotate_45(&orig), orig);
+    }
+
+    #[test]
+    fn test_array_2d() {
+        let i = Array2D::<i32>::default(3, 2);
+        assert_eq!(i.data, vec![vec![0, 0], vec![0, 0], vec![0, 0]]);
+
+        let f: Array2D<f32> = Array2D::default(3, 2);
+        assert_eq!(f.data, vec![vec![0.0, 0.0], vec![0.0, 0.0], vec![0.0, 0.0]]);
     }
 }

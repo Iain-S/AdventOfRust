@@ -49,7 +49,7 @@ mod tests {
 
     #[test]
     fn test_part_two() {
-        let result = part_two(&example_input("00"));
-        assert_eq!(result, 0);
+        let result = part_two(&example_input("04"));
+        assert_eq!(result, 2);
     }
 }
