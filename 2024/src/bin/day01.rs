@@ -60,8 +60,8 @@ fn part_two(s: String) -> u32 {
     let mut right = Vec::new();
 
     // Split the input into two vectors
-    for line in s.split("\n") {
-        if line == "" {
+    for line in s.split('\n') {
+        if line.is_empty() {
             continue;
         }
         let (l, r) = split_line(line.to_string());

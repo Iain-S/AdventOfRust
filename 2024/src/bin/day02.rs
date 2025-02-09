@@ -10,12 +10,10 @@ fn main() {
 
 fn is_safe(levels: Vec<i32>) -> bool {
     fn pos(x: &[i32]) -> bool {
-        let result = x[1] - x[0] > 0 && x[1] - x[0] <= 3;
-        result
+        x[1] - x[0] > 0 && x[1] - x[0] <= 3
     }
     fn neg(x: &[i32]) -> bool {
-        let result = x[1] - x[0] < 0 && x[1] - x[0] >= -3;
-        result
+        x[1] - x[0] < 0 && x[1] - x[0] >= -3
     }
     let all_pos = levels.windows(2).all(pos);
     let all_neg = levels.windows(2).all(neg);

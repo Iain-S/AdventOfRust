@@ -12,7 +12,7 @@ pub(crate) fn example_input(day: &str) -> String {
 #[allow(dead_code)]
 pub(crate) fn problem_input(day: &str) -> String {
     let result = read_to_string("input/".to_string() + day + ".txt").unwrap();
-    if result.len() == 0 {
+    if result.is_empty() {
         panic!("No input found for day {}", day);
     }
     result
@@ -73,7 +73,7 @@ struct Array2D<T> {
 impl<T> Array2D<T> {
     fn default(rows: usize, cols: usize) -> Self
     where
-        T: Default + Clone,
+        T: Default,
     {
         let mut data = Vec::new();
         for _ in 0..rows {
@@ -87,41 +87,56 @@ impl<T> Array2D<T> {
     }
 }
 
-impl Array2D<char> {
-    fn window(self) -> char {
-        // todo: make this into an iterator over slices
-        'a'
-    }
-}
-
 impl<'a, T> IntoIterator for &'a Array2D<T> {
-    type Item = (&'a [T], &'a [T]);
+    type Item = ((&'a T, &'a T, &'a T), (&'a T, &'a T, &'a T));
     type IntoIter = Array2DIterator<'a, T>;
 
     fn into_iter(self) -> Self::IntoIter {
         Array2DIterator {
             array2d: self,
-            index: 0,
+            i: 0,
+            j: 0,
         }
     }
 }
 
 struct Array2DIterator<'a, T> {
     array2d: &'a Array2D<T>,
-    index: usize,
+    i: usize,
+    j: usize,
 }
 
 impl<'a, T> Iterator for Array2DIterator<'a, T> {
-    type Item = (&'a [T], &'a [T]);
+    type Item = ((&'a T, &'a T, &'a T), (&'a T, &'a T, &'a T));
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.index < self.array2d.data.len() {
-            let result = &self.array2d.data[self.index];
-            self.index += 1;
-            Some((result, result))
-        } else {
-            None
+        // if we're at the end of the row, move to the next row
+        if self.j + 2 >= self.array2d.data[0].len() {
+            self.j = 0;
+            self.i += 1;
         }
+
+        // if we're at the end of the column, return None
+        if self.i + 2 >= self.array2d.data.len() {
+            return None;
+        }
+
+        // otherwise, return the slices
+        let result = &self.array2d.data[self.i][self.j..self.j + 3];
+        let down_and_right = (
+            &self.array2d.data[self.i][self.j],
+            &self.array2d.data[self.i + 1][self.j + 1],
+            &self.array2d.data[self.i + 2][self.j + 2],
+        );
+        let up_and_right = (
+            &self.array2d.data[self.i + 2][self.j],
+            &self.array2d.data[self.i + 1][self.j + 1],
+            &self.array2d.data[self.i][self.j + 2],
+        );
+
+        self.j += 1;
+        self.i += 1;
+        Some((down_and_right, up_and_right))
     }
 }
 
@@ -163,18 +178,19 @@ mod tests {
     }
 
     #[test]
-    fn test_array_2d_window() {
-        assert_eq!('a', (Array2D::<char>::default(1, 1)).window());
-    }
-
-    #[test]
     fn test_array_2d_iter() {
-        let a = Array2D::<char>::default(2, 3);
+        // \0 \0 \0
+        // \0 \0 \0
+        // \0 \0 \0
+        let mut a = Array2D::<char>::default(3, 3);
+        a.data[0][0] = 'a';
+        a.data[2][2] = 'b';
         let mut iter = a.into_iter();
 
-        let slice_of_default = &vec!['\0', '\0', '\0'][..];
-        let some_slice = Some((slice_of_default, slice_of_default));
-        assert_eq!(some_slice, iter.next());
+        let a = (&'a', &'\0', &'b');
+        let b = (&'\0', &'\0', &'\0');
+
+        let some_slice = Some((a, b));
         assert_eq!(some_slice, iter.next());
         assert_eq!(None, iter.next());
     }
