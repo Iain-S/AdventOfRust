@@ -30,7 +30,17 @@ fn part_one(s: &str) -> usize {
 }
 
 fn part_two(s: &str) -> u32 {
-    2
+    let array_2d = utils::Array2D::new(s.lines().map(|l| l.chars().collect()).collect());
+    let mut count = 0;
+    for (x, y) in &array_2d {
+        let mas = (&'M', &'A', &'S');
+        let sam = (&'S', &'A', &'M');
+
+        if (x == mas || x == sam) && (y == mas || y == sam) {
+            count += 1;
+        }
+    }
+    count
 }
 
 #[cfg(test)]
@@ -48,6 +58,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let result = part_two(&example_input("04"));
-        //assert_eq!(result, 2);
+        assert_eq!(result, 9);
     }
 }

@@ -66,11 +66,13 @@ pub(crate) fn rotate_45(cw: &[Vec<char>]) -> Vec<Vec<char>> {
     ccw
 }
 
-struct Array2D<T> {
+pub(crate) struct Array2D<T> {
     data: Vec<Vec<T>>,
 }
 
 impl<T> Array2D<T> {
+    #[allow(dead_code)]
+    // Create an Array2D with the given dimensions, filled with the default value of T.
     fn default(rows: usize, cols: usize) -> Self
     where
         T: Default,
@@ -84,6 +86,11 @@ impl<T> Array2D<T> {
             data.push(row);
         }
         Array2D { data }
+    }
+    #[allow(dead_code)]
+    // Create an Array2D with the given dimensions, filled with the default value of T.
+    pub fn new(d: Vec<Vec<T>>) -> Self {
+        Array2D { data: d }
     }
 }
 
@@ -100,7 +107,7 @@ impl<'a, T> IntoIterator for &'a Array2D<T> {
     }
 }
 
-struct Array2DIterator<'a, T> {
+pub(crate) struct Array2DIterator<'a, T> {
     array2d: &'a Array2D<T>,
     i: usize,
     j: usize,
@@ -122,7 +129,6 @@ impl<'a, T> Iterator for Array2DIterator<'a, T> {
         }
 
         // otherwise, return the slices
-        let result = &self.array2d.data[self.i][self.j..self.j + 3];
         let down_and_right = (
             &self.array2d.data[self.i][self.j],
             &self.array2d.data[self.i + 1][self.j + 1],
@@ -135,7 +141,6 @@ impl<'a, T> Iterator for Array2DIterator<'a, T> {
         );
 
         self.j += 1;
-        self.i += 1;
         Some((down_and_right, up_and_right))
     }
 }
@@ -193,5 +198,10 @@ mod tests {
         let some_slice = Some((a, b));
         assert_eq!(some_slice, iter.next());
         assert_eq!(None, iter.next());
+    }
+
+    #[test]
+    fn test_new() {
+        Array2D::new(vec![vec![1]]);
     }
 }
