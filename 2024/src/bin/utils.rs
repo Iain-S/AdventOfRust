@@ -87,6 +87,44 @@ impl<T> Array2D<T> {
     }
 }
 
+impl Array2D<char> {
+    fn window(self) -> char {
+        // todo: make this into an iterator over slices
+        'a'
+    }
+}
+
+impl<'a, T> IntoIterator for &'a Array2D<T> {
+    type Item = (&'a [T], &'a [T]);
+    type IntoIter = Array2DIterator<'a, T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        Array2DIterator {
+            array2d: self,
+            index: 0,
+        }
+    }
+}
+
+struct Array2DIterator<'a, T> {
+    array2d: &'a Array2D<T>,
+    index: usize,
+}
+
+impl<'a, T> Iterator for Array2DIterator<'a, T> {
+    type Item = (&'a [T], &'a [T]);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.index < self.array2d.data.len() {
+            let result = &self.array2d.data[self.index];
+            self.index += 1;
+            Some((result, result))
+        } else {
+            None
+        }
+    }
+}
+
 #[allow(dead_code)]
 fn main() {}
 
@@ -122,5 +160,22 @@ mod tests {
 
         let f: Array2D<f32> = Array2D::default(3, 2);
         assert_eq!(f.data, vec![vec![0.0, 0.0], vec![0.0, 0.0], vec![0.0, 0.0]]);
+    }
+
+    #[test]
+    fn test_array_2d_window() {
+        assert_eq!('a', (Array2D::<char>::default(1, 1)).window());
+    }
+
+    #[test]
+    fn test_array_2d_iter() {
+        let a = Array2D::<char>::default(2, 3);
+        let mut iter = a.into_iter();
+
+        let slice_of_default = &vec!['\0', '\0', '\0'][..];
+        let some_slice = Some((slice_of_default, slice_of_default));
+        assert_eq!(some_slice, iter.next());
+        assert_eq!(some_slice, iter.next());
+        assert_eq!(None, iter.next());
     }
 }
