@@ -26,10 +26,9 @@ impl Laboratory {
     }
 
     fn move_up(&mut self) -> bool {
-        // Move up.
         loop {
+            self.rows[self.position.0][self.position.1] = 'X';
             if self.position.0 == 0 {
-                self.rows[self.position.0][self.position.1] = 'X';
                 return true;
             }
             let next_position = (self.position.0 - 1, self.position.1);
@@ -38,12 +37,65 @@ impl Laboratory {
                 self.rows[self.position.0][self.position.1] = '>';
                 return false;
             } else {
-                // Mark the current position as visited.
-                self.rows[self.position.0][self.position.1] = 'X';
-
                 // Move to the next position.
                 self.position = next_position;
                 self.rows[self.position.0][self.position.1] = '^';
+            }
+        }
+    }
+
+    fn move_right(&mut self) -> bool {
+        loop {
+            self.rows[self.position.0][self.position.1] = 'X';
+            if self.position.1 == self.rows[0].len() - 1 {
+                return true;
+            }
+            let next_position = (self.position.0, self.position.1 + 1);
+            if self.rows[next_position.0][next_position.1] == '#' {
+                // Turn 90 degrees to the right.
+                self.rows[self.position.0][self.position.1] = 'v';
+                return false;
+            } else {
+                // Move to the next position.
+                self.position = next_position;
+                self.rows[self.position.0][self.position.1] = '>';
+            }
+        }
+    }
+
+    fn move_left(&mut self) -> bool {
+        loop {
+            self.rows[self.position.0][self.position.1] = 'X';
+            if self.position.1 == 0 {
+                return true;
+            }
+            let next_position = (self.position.0, self.position.1 - 1);
+            if self.rows[next_position.0][next_position.1] == '#' {
+                // Turn 90 degrees to the right.
+                self.rows[self.position.0][self.position.1] = '^';
+                return false;
+            } else {
+                // Move to the next position.
+                self.position = next_position;
+                self.rows[self.position.0][self.position.1] = '<';
+            }
+        }
+    }
+    fn move_down(&mut self) -> bool {
+        loop {
+            self.rows[self.position.0][self.position.1] = 'X';
+            if self.position.0 == self.rows.len() - 1 {
+                return true;
+            }
+            let next_position = (self.position.0 + 1, self.position.1);
+            if self.rows[next_position.0][next_position.1] == '#' {
+                // Turn 90 degrees to the right.
+                self.rows[self.position.0][self.position.1] = '<';
+                return false;
+            } else {
+                // Move to the next position.
+                self.position = next_position;
+                self.rows[self.position.0][self.position.1] = 'v';
             }
         }
     }
@@ -53,11 +105,24 @@ impl Laboratory {
         let char = self.rows[self.position.0][self.position.1];
         match char {
             '^' => self.move_up(),
-            // 'v' => self.move_down(),
-            // '<' => self.move_left(),
-            // '>' => self.move_right(),
+            'v' => self.move_down(),
+            '<' => self.move_left(),
+            '>' => self.move_right(),
             _ => panic!("Invalid character"),
         }
+    }
+
+    fn visited(&self) -> u32 {
+        // Count the number of visited positions.
+        let mut count = 0;
+        for row in &self.rows {
+            for c in row {
+                if *c == 'X' {
+                    count += 1;
+                }
+            }
+        }
+        count
     }
 
     fn to_image(&self) -> String {
@@ -81,7 +146,15 @@ fn main() {
 }
 
 fn part_one(s: &str) -> u32 {
-    1
+    let mut lab = Laboratory::new(s);
+    loop {
+        let fell_off_map = lab.move_once();
+        if fell_off_map {
+            break;
+        }
+    }
+    print!("{}", lab.to_image());
+    lab.visited()
 }
 
 fn part_two(s: &str) -> u32 {
@@ -112,17 +185,41 @@ mod tests {
 
     #[test]
     fn test_move_once() {
-        let expected = example_input("06_i");
         let mut lab = Laboratory::new(&example_input("06"));
+
+        let expected = example_input("06_i");
         let fell_off_map = lab.move_once();
         assert_eq!(fell_off_map, false);
+        assert_eq!(lab.visited(), 5);
+
         let actual = lab.to_image();
-        assert_eq!(expected, actual)
+        assert_eq!(expected, actual);
+
+        let expected = example_input("06_ii");
+        let fell_off_map = lab.move_once();
+        assert_eq!(fell_off_map, false);
+
+        let actual = lab.to_image();
+        assert_eq!(expected, actual);
+
+        let expected = example_input("06_iii");
+        let fell_off_map = lab.move_once();
+        assert_eq!(fell_off_map, false);
+
+        let actual = lab.to_image();
+        assert_eq!(expected, actual);
+
+        let expected = example_input("06_iv");
+        let fell_off_map = lab.move_once();
+        assert_eq!(fell_off_map, false);
+
+        let actual = lab.to_image();
+        assert_eq!(expected, actual);
     }
 
     #[test]
     fn test_part_two() {
         let result = part_two(&example_input("06"));
-        assert_eq!(result, 0);
+        assert_eq!(result, 2);
     }
 }
