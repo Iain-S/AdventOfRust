@@ -3,6 +3,7 @@ mod utils;
 struct Laboratory {
     rows: Vec<Vec<char>>,
     position: (usize, usize),
+    obstructions: u32,
 }
 
 impl Laboratory {
@@ -22,12 +23,12 @@ impl Laboratory {
         Laboratory {
             rows,
             position: starting_position,
+            obstructions: 0,
         }
     }
 
     fn move_up(&mut self) -> bool {
         loop {
-            self.rows[self.position.0][self.position.1] = 'X';
             if self.position.0 == 0 {
                 return true;
             }
@@ -39,6 +40,19 @@ impl Laboratory {
             } else {
                 // Move to the next position.
                 self.position = next_position;
+
+                // Look to the right.
+                for i in self.position.1..self.rows[0].len() - 1 {
+                    match self.rows[self.position.0][i] {
+                        '>' => {
+                            self.obstructions += 1;
+                            break;
+                        }
+                        '#' => break,
+                        _ => continue,
+                    }
+                }
+
                 self.rows[self.position.0][self.position.1] = '^';
             }
         }
@@ -46,7 +60,6 @@ impl Laboratory {
 
     fn move_right(&mut self) -> bool {
         loop {
-            self.rows[self.position.0][self.position.1] = 'X';
             if self.position.1 == self.rows[0].len() - 1 {
                 return true;
             }
@@ -58,6 +71,19 @@ impl Laboratory {
             } else {
                 // Move to the next position.
                 self.position = next_position;
+
+                // Look down.
+                for i in self.position.0..self.rows.len() - 1 {
+                    match self.rows[i][self.position.1] {
+                        'v' => {
+                            self.obstructions += 1;
+                            break;
+                        }
+                        '#' => break,
+                        _ => continue,
+                    }
+                }
+
                 self.rows[self.position.0][self.position.1] = '>';
             }
         }
@@ -65,7 +91,6 @@ impl Laboratory {
 
     fn move_left(&mut self) -> bool {
         loop {
-            self.rows[self.position.0][self.position.1] = 'X';
             if self.position.1 == 0 {
                 return true;
             }
@@ -77,13 +102,26 @@ impl Laboratory {
             } else {
                 // Move to the next position.
                 self.position = next_position;
+
+                // Look up.
+                for i in (0..self.position.0).rev() {
+                    match self.rows[i][self.position.1] {
+                        '^' => {
+                            self.obstructions += 1;
+                            break;
+                        }
+                        '#' => break,
+                        _ => continue,
+                    }
+                }
+
                 self.rows[self.position.0][self.position.1] = '<';
             }
         }
     }
+
     fn move_down(&mut self) -> bool {
         loop {
-            self.rows[self.position.0][self.position.1] = 'X';
             if self.position.0 == self.rows.len() - 1 {
                 return true;
             }
@@ -95,6 +133,19 @@ impl Laboratory {
             } else {
                 // Move to the next position.
                 self.position = next_position;
+
+                // Look left.
+                for i in (0..self.position.1).rev() {
+                    match self.rows[self.position.0][i] {
+                        '<' => {
+                            self.obstructions += 1;
+                            break;
+                        }
+                        '#' => break,
+                        _ => continue,
+                    }
+                }
+
                 self.rows[self.position.0][self.position.1] = 'v';
             }
         }
@@ -117,7 +168,8 @@ impl Laboratory {
         let mut count = 0;
         for row in &self.rows {
             for c in row {
-                if *c == 'X' {
+                // if my tuple contains c
+                if ['^', '>', '<', 'v'].contains(&c) {
                     count += 1;
                 }
             }
@@ -145,7 +197,7 @@ fn main() {
     println!("Part 2: {}", part_two(&input));
 }
 
-fn part_one(s: &str) -> u32 {
+fn run(s: &str) -> Laboratory {
     let mut lab = Laboratory::new(s);
     loop {
         let fell_off_map = lab.move_once();
@@ -153,12 +205,18 @@ fn part_one(s: &str) -> u32 {
             break;
         }
     }
-    print!("{}", lab.to_image());
+    // print!("{}", lab.to_image());
+    lab
+}
+
+fn part_one(s: &str) -> u32 {
+    let lab = run(s);
     lab.visited()
 }
 
 fn part_two(s: &str) -> u32 {
-    2
+    let lab = run(s);
+    lab.obstructions
 }
 
 #[cfg(test)]
@@ -190,7 +248,7 @@ mod tests {
         let expected = example_input("06_i");
         let fell_off_map = lab.move_once();
         assert_eq!(fell_off_map, false);
-        assert_eq!(lab.visited(), 5);
+        assert_eq!(lab.visited(), 6);
 
         let actual = lab.to_image();
         assert_eq!(expected, actual);
@@ -219,7 +277,8 @@ mod tests {
 
     #[test]
     fn test_part_two() {
+        // loop from 10 to 0
         let result = part_two(&example_input("06"));
-        assert_eq!(result, 2);
+        assert_eq!(result, 6);
     }
 }
