@@ -16,6 +16,10 @@ struct Laboratory {
     fork: bool,
     moves: u32,
     print: bool,
+    visited_up: HashSet<(usize, usize)>,
+    visited_down: HashSet<(usize, usize)>,
+    visited_left: HashSet<(usize, usize)>,
+    visited_right: HashSet<(usize, usize)>,
 }
 
 impl Laboratory {
@@ -39,6 +43,10 @@ impl Laboratory {
             fork: true,
             moves: 0,
             print: false,
+            visited_up: HashSet::new(),
+            visited_down: HashSet::new(),
+            visited_left: HashSet::new(),
+            visited_right: HashSet::new(),
         }
     }
 
@@ -55,11 +63,18 @@ impl Laboratory {
             fork: false,
             moves: 0,
             print: false,
+            visited_up: HashSet::new(),
+            visited_down: HashSet::new(),
+            visited_left: HashSet::new(),
+            visited_right: HashSet::new(),
         }
     }
 
     fn move_up(&mut self) -> Reason {
         loop {
+            if !self.fork {
+                self.visited_up.insert(self.position);
+            }
             if self.print {
                 print!("{}", self.to_image());
             }
@@ -71,6 +86,12 @@ impl Laboratory {
                 return Reason::FellOffMap;
             }
             let next_position = (self.position.0 - 1, self.position.1);
+            if !self.fork {
+                if self.visited_up.contains(&next_position) {
+                    return Reason::Looped;
+                }
+            }
+
             if self.rows[next_position.0][next_position.1] == '#' {
                 // Turn 90 degrees to the right.
                 self.rows[self.position.0][self.position.1] = '>';
@@ -86,17 +107,6 @@ impl Laboratory {
                     self.obstructions.insert(next_position);
                 }
             }
-            if next_position.0 > 0 {
-                // Check if the next position is a wall.
-                if self.rows[next_position.0][next_position.1] == '>'
-                    && self.rows[next_position.0 - 1][next_position.1] == '#'
-                {
-                    if self.fork {
-                        panic!("We are in the fork");
-                    }
-                    return Reason::Looped;
-                }
-            }
 
             // Move to the next position.
             self.position = next_position;
@@ -106,6 +116,9 @@ impl Laboratory {
 
     fn move_right(&mut self) -> Reason {
         loop {
+            if !self.fork {
+                self.visited_right.insert(self.position);
+            }
             if self.print {
                 print!("{}", self.to_image());
             }
@@ -117,6 +130,11 @@ impl Laboratory {
                 return Reason::FellOffMap;
             }
             let next_position = (self.position.0, self.position.1 + 1);
+            if !self.fork {
+                if self.visited_right.contains(&next_position) {
+                    return Reason::Looped;
+                }
+            }
             if self.rows[next_position.0][next_position.1] == '#' {
                 // Turn 90 degrees to the right.
                 self.rows[self.position.0][self.position.1] = 'v';
@@ -135,17 +153,6 @@ impl Laboratory {
                     self.obstructions.insert(next_position);
                 }
             }
-            if next_position.1 + 1 < self.rows[0].len() {
-                // Check if the next position is a wall.
-                if self.rows[next_position.0][next_position.1] == 'v'
-                    && self.rows[next_position.0][next_position.1 + 1] == '#'
-                {
-                    if self.fork {
-                        panic!("We are in the fork");
-                    }
-                    return Reason::Looped;
-                }
-            }
 
             // Move to the next position.
             self.position = next_position;
@@ -155,6 +162,9 @@ impl Laboratory {
 
     fn move_left(&mut self) -> Reason {
         loop {
+            if !self.fork {
+                self.visited_left.insert(self.position);
+            }
             if self.print {
                 print!("{}", self.to_image());
             }
@@ -166,6 +176,11 @@ impl Laboratory {
                 return Reason::FellOffMap;
             }
             let next_position = (self.position.0, self.position.1 - 1);
+            if !self.fork {
+                if self.visited_left.contains(&next_position) {
+                    return Reason::Looped;
+                }
+            }
             if self.rows[next_position.0][next_position.1] == '#' {
                 // Turn 90 degrees to the right.
                 self.rows[self.position.0][self.position.1] = '^';
@@ -181,16 +196,6 @@ impl Laboratory {
                     self.obstructions.insert(next_position);
                 }
             }
-            if next_position.1 > 0 {
-                if self.rows[next_position.0][next_position.1] == '^'
-                    && self.rows[next_position.0][next_position.1 - 1] == '#'
-                {
-                    if self.fork {
-                        panic!("We are in the fork");
-                    }
-                    return Reason::Looped;
-                }
-            }
 
             // Move to the next position.
             self.position = next_position;
@@ -200,6 +205,9 @@ impl Laboratory {
 
     fn move_down(&mut self) -> Reason {
         loop {
+            if !self.fork {
+                self.visited_down.insert(self.position);
+            }
             if self.print {
                 print!("{}", self.to_image());
             }
@@ -211,6 +219,11 @@ impl Laboratory {
                 return Reason::FellOffMap;
             }
             let next_position = (self.position.0 + 1, self.position.1);
+            if !self.fork {
+                if self.visited_down.contains(&next_position) {
+                    return Reason::Looped;
+                }
+            }
             if self.rows[next_position.0][next_position.1] == '#' {
                 // Turn 90 degrees to the right.
                 self.rows[self.position.0][self.position.1] = '<';
@@ -224,16 +237,6 @@ impl Laboratory {
                 fork.rows[self.position.0][self.position.1] = '<';
                 if fork.run() == Reason::Looped {
                     self.obstructions.insert(next_position);
-                }
-            }
-            if next_position.0 + 1 < self.rows.len() {
-                if self.rows[next_position.0][next_position.1] == '<'
-                    && self.rows[next_position.0 + 1][next_position.1] == '#'
-                {
-                    if self.fork {
-                        panic!("We are in the fork");
-                    }
-                    return Reason::Looped;
                 }
             }
 
