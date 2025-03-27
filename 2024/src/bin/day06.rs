@@ -1,9 +1,18 @@
 mod utils;
+use std::collections::HashSet;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Reason {
+    FellOffMap,
+    HitWall,
+    Looped,
+}
 
 struct Laboratory {
     rows: Vec<Vec<char>>,
     position: (usize, usize),
-    obstructions: u32,
+    obstructions: HashSet<(usize, usize)>,
+    fork: bool,
 }
 
 impl Laboratory {
@@ -23,135 +32,176 @@ impl Laboratory {
         Laboratory {
             rows,
             position: starting_position,
-            obstructions: 0,
+            obstructions: HashSet::new(),
+            fork: true,
         }
     }
 
-    fn move_up(&mut self) -> bool {
+    fn copy(&self) -> Self {
+        // make a deep copy of the laboratory
+        let mut rows = Vec::new();
+        for row in &self.rows {
+            rows.push(row.clone());
+        }
+        Laboratory {
+            rows: rows,
+            position: self.position,
+            obstructions: HashSet::new(),
+            fork: false,
+        }
+    }
+
+    fn move_up(&mut self) -> Reason {
         loop {
             if self.position.0 == 0 {
-                return true;
+                return Reason::FellOffMap;
             }
             let next_position = (self.position.0 - 1, self.position.1);
             if self.rows[next_position.0][next_position.1] == '#' {
                 // Turn 90 degrees to the right.
                 self.rows[self.position.0][self.position.1] = '>';
-                return false;
-            } else {
-                // Move to the next position.
-                self.position = next_position;
+                return Reason::HitWall;
+            }
 
+            if self.fork && self.rows[next_position.0][next_position.1] == '.' {
                 // Look to the right.
-                for i in self.position.1..self.rows[0].len() - 1 {
-                    match self.rows[self.position.0][i] {
-                        '>' => {
-                            self.obstructions += 1;
-                            break;
-                        }
-                        '#' => break,
-                        _ => continue,
+                let mut fork = self.copy();
+                fork.rows[next_position.0][next_position.1] = '#';
+                fork.rows[self.position.0][self.position.1] = '>';
+                if fork.run() == Reason::Looped {
+                    self.obstructions.insert(next_position);
+                }
+            } else {
+                // We are in the fork.
+                if next_position.0 > 0 {
+                    // Check if the next position is a wall.
+                    if self.rows[next_position.0][next_position.1] == '>'
+                        && self.rows[next_position.0 - 1][next_position.1] == '#'
+                    {
+                        return Reason::Looped;
                     }
                 }
-
-                self.rows[self.position.0][self.position.1] = '^';
             }
+
+            // Move to the next position.
+            self.position = next_position;
+            self.rows[self.position.0][self.position.1] = '^';
         }
     }
 
-    fn move_right(&mut self) -> bool {
+    fn move_right(&mut self) -> Reason {
         loop {
             if self.position.1 == self.rows[0].len() - 1 {
-                return true;
+                return Reason::FellOffMap;
             }
             let next_position = (self.position.0, self.position.1 + 1);
             if self.rows[next_position.0][next_position.1] == '#' {
                 // Turn 90 degrees to the right.
                 self.rows[self.position.0][self.position.1] = 'v';
-                return false;
-            } else {
-                // Move to the next position.
-                self.position = next_position;
+                return Reason::HitWall;
+            }
 
+            if self.fork && self.rows[next_position.0][next_position.1] == '.' {
                 // Look down.
-                for i in self.position.0..self.rows.len() - 1 {
-                    match self.rows[i][self.position.1] {
-                        'v' => {
-                            self.obstructions += 1;
-                            break;
-                        }
-                        '#' => break,
-                        _ => continue,
+                let mut fork = self.copy();
+                fork.rows[next_position.0][next_position.1] = '#';
+                fork.rows[self.position.0][self.position.1] = 'v';
+                if fork.run() == Reason::Looped {
+                    self.obstructions.insert(next_position);
+                }
+            } else {
+                // We are in the fork.
+                if next_position.1 + 1 < self.rows[0].len() {
+                    // Check if the next position is a wall.
+                    if self.rows[next_position.0][next_position.1] == 'v'
+                        && self.rows[next_position.0][next_position.1 + 1] == '#'
+                    {
+                        return Reason::Looped;
                     }
                 }
-
-                self.rows[self.position.0][self.position.1] = '>';
             }
+
+            // Move to the next position.
+            self.position = next_position;
+            self.rows[self.position.0][self.position.1] = '>';
         }
     }
 
-    fn move_left(&mut self) -> bool {
+    fn move_left(&mut self) -> Reason {
         loop {
             if self.position.1 == 0 {
-                return true;
+                return Reason::FellOffMap;
             }
             let next_position = (self.position.0, self.position.1 - 1);
             if self.rows[next_position.0][next_position.1] == '#' {
                 // Turn 90 degrees to the right.
                 self.rows[self.position.0][self.position.1] = '^';
-                return false;
-            } else {
-                // Move to the next position.
-                self.position = next_position;
+                return Reason::HitWall;
+            }
 
+            if self.fork && self.rows[next_position.0][next_position.1] == '.' {
                 // Look up.
-                for i in (0..self.position.0).rev() {
-                    match self.rows[i][self.position.1] {
-                        '^' => {
-                            self.obstructions += 1;
-                            break;
-                        }
-                        '#' => break,
-                        _ => continue,
+                let mut fork = self.copy();
+                fork.rows[next_position.0][next_position.1] = '#';
+                fork.rows[self.position.0][self.position.1] = '^';
+                if fork.run() == Reason::Looped {
+                    self.obstructions.insert(next_position);
+                }
+            } else {
+                // We are in the fork.
+                if next_position.1 > 0 {
+                    if self.rows[next_position.0][next_position.1] == '^'
+                        && self.rows[next_position.0][next_position.1 - 1] == '#'
+                    {
+                        return Reason::Looped;
                     }
                 }
-
-                self.rows[self.position.0][self.position.1] = '<';
             }
+
+            // Move to the next position.
+            self.position = next_position;
+            self.rows[self.position.0][self.position.1] = '<';
         }
     }
 
-    fn move_down(&mut self) -> bool {
+    fn move_down(&mut self) -> Reason {
         loop {
             if self.position.0 == self.rows.len() - 1 {
-                return true;
+                return Reason::FellOffMap;
             }
             let next_position = (self.position.0 + 1, self.position.1);
             if self.rows[next_position.0][next_position.1] == '#' {
                 // Turn 90 degrees to the right.
                 self.rows[self.position.0][self.position.1] = '<';
-                return false;
-            } else {
-                // Move to the next position.
-                self.position = next_position;
+                return Reason::HitWall;
+            }
 
+            if self.fork && self.rows[next_position.0][next_position.1] == '.' {
                 // Look left.
-                for i in (0..self.position.1).rev() {
-                    match self.rows[self.position.0][i] {
-                        '<' => {
-                            self.obstructions += 1;
-                            break;
-                        }
-                        '#' => break,
-                        _ => continue,
+                let mut fork = self.copy();
+                fork.rows[next_position.0][next_position.1] = '#';
+                fork.rows[self.position.0][self.position.1] = '<';
+                if fork.run() == Reason::Looped {
+                    self.obstructions.insert(next_position);
+                }
+            } else {
+                // We are in the fork.
+                if next_position.0 + 1 < self.rows.len() {
+                    if self.rows[next_position.0][next_position.1] == '<'
+                        && self.rows[next_position.0 + 1][next_position.1] == '#'
+                    {
+                        return Reason::Looped;
                     }
                 }
-
-                self.rows[self.position.0][self.position.1] = 'v';
             }
+
+            // Move to the next position.
+            self.position = next_position;
+            self.rows[self.position.0][self.position.1] = 'v';
         }
     }
 
-    fn move_once(&mut self) -> bool {
+    fn move_once(&mut self) -> Reason {
         // Move until we encounter a '#'.
         let char = self.rows[self.position.0][self.position.1];
         match char {
@@ -177,6 +227,16 @@ impl Laboratory {
         count
     }
 
+    fn run(&mut self) -> Reason {
+        loop {
+            match self.move_once() {
+                Reason::FellOffMap => return Reason::FellOffMap,
+                Reason::HitWall => continue,
+                Reason::Looped => return Reason::Looped,
+            }
+        }
+    }
+
     fn to_image(&self) -> String {
         // Combine vec of strings into a single string.
         let mut result = String::new();
@@ -197,26 +257,17 @@ fn main() {
     println!("Part 2: {}", part_two(&input));
 }
 
-fn run(s: &str) -> Laboratory {
-    let mut lab = Laboratory::new(s);
-    loop {
-        let fell_off_map = lab.move_once();
-        if fell_off_map {
-            break;
-        }
-    }
-    // print!("{}", lab.to_image());
-    lab
-}
-
 fn part_one(s: &str) -> u32 {
-    let lab = run(s);
+    let mut lab = Laboratory::new(s);
+    lab.fork = false;
+    lab.run();
     lab.visited()
 }
 
 fn part_two(s: &str) -> u32 {
-    let lab = run(s);
-    lab.obstructions
+    let mut lab = Laboratory::new(s);
+    lab.run();
+    lab.obstructions.len() as u32
 }
 
 #[cfg(test)]
@@ -246,30 +297,26 @@ mod tests {
         let mut lab = Laboratory::new(&example_input("06"));
 
         let expected = example_input("06_i");
-        let fell_off_map = lab.move_once();
-        assert_eq!(fell_off_map, false);
+        assert_eq!(Reason::HitWall, lab.move_once());
         assert_eq!(lab.visited(), 6);
 
         let actual = lab.to_image();
         assert_eq!(expected, actual);
 
         let expected = example_input("06_ii");
-        let fell_off_map = lab.move_once();
-        assert_eq!(fell_off_map, false);
+        assert_eq!(Reason::HitWall, lab.move_once());
 
         let actual = lab.to_image();
         assert_eq!(expected, actual);
 
         let expected = example_input("06_iii");
-        let fell_off_map = lab.move_once();
-        assert_eq!(fell_off_map, false);
+        assert_eq!(Reason::HitWall, lab.move_once());
 
         let actual = lab.to_image();
         assert_eq!(expected, actual);
 
         let expected = example_input("06_iv");
-        let fell_off_map = lab.move_once();
-        assert_eq!(fell_off_map, false);
+        assert_eq!(Reason::HitWall, lab.move_once());
 
         let actual = lab.to_image();
         assert_eq!(expected, actual);
@@ -277,8 +324,13 @@ mod tests {
 
     #[test]
     fn test_part_two() {
-        // loop from 10 to 0
         let result = part_two(&example_input("06"));
         assert_eq!(result, 6);
+    }
+
+    #[test]
+    fn test_part_tutu() {
+        let result = part_two(&example_input("06_v"));
+        assert_eq!(result, 1);
     }
 }
