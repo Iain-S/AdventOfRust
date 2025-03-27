@@ -1,4 +1,5 @@
 mod utils;
+use core::panic;
 use std::collections::HashSet;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -13,6 +14,8 @@ struct Laboratory {
     position: (usize, usize),
     obstructions: HashSet<(usize, usize)>,
     fork: bool,
+    moves: u32,
+    print: bool,
 }
 
 impl Laboratory {
@@ -34,6 +37,8 @@ impl Laboratory {
             position: starting_position,
             obstructions: HashSet::new(),
             fork: true,
+            moves: 0,
+            print: false,
         }
     }
 
@@ -48,11 +53,20 @@ impl Laboratory {
             position: self.position,
             obstructions: HashSet::new(),
             fork: false,
+            moves: 0,
+            print: false,
         }
     }
 
     fn move_up(&mut self) -> Reason {
         loop {
+            if self.print {
+                print!("{}", self.to_image());
+            }
+            if self.fork {
+                println!("Move {:?}", self.moves);
+                self.moves += 1;
+            }
             if self.position.0 == 0 {
                 return Reason::FellOffMap;
             }
@@ -71,15 +85,16 @@ impl Laboratory {
                 if fork.run() == Reason::Looped {
                     self.obstructions.insert(next_position);
                 }
-            } else {
-                // We are in the fork.
-                if next_position.0 > 0 {
-                    // Check if the next position is a wall.
-                    if self.rows[next_position.0][next_position.1] == '>'
-                        && self.rows[next_position.0 - 1][next_position.1] == '#'
-                    {
-                        return Reason::Looped;
+            }
+            if next_position.0 > 0 {
+                // Check if the next position is a wall.
+                if self.rows[next_position.0][next_position.1] == '>'
+                    && self.rows[next_position.0 - 1][next_position.1] == '#'
+                {
+                    if self.fork {
+                        panic!("We are in the fork");
                     }
+                    return Reason::Looped;
                 }
             }
 
@@ -91,6 +106,13 @@ impl Laboratory {
 
     fn move_right(&mut self) -> Reason {
         loop {
+            if self.print {
+                print!("{}", self.to_image());
+            }
+            if self.fork {
+                println!("Move {:?}", self.moves);
+                self.moves += 1;
+            }
             if self.position.1 == self.rows[0].len() - 1 {
                 return Reason::FellOffMap;
             }
@@ -104,20 +126,24 @@ impl Laboratory {
             if self.fork && self.rows[next_position.0][next_position.1] == '.' {
                 // Look down.
                 let mut fork = self.copy();
+                if self.moves == 87 {
+                    fork.print = true;
+                }
                 fork.rows[next_position.0][next_position.1] = '#';
                 fork.rows[self.position.0][self.position.1] = 'v';
                 if fork.run() == Reason::Looped {
                     self.obstructions.insert(next_position);
                 }
-            } else {
-                // We are in the fork.
-                if next_position.1 + 1 < self.rows[0].len() {
-                    // Check if the next position is a wall.
-                    if self.rows[next_position.0][next_position.1] == 'v'
-                        && self.rows[next_position.0][next_position.1 + 1] == '#'
-                    {
-                        return Reason::Looped;
+            }
+            if next_position.1 + 1 < self.rows[0].len() {
+                // Check if the next position is a wall.
+                if self.rows[next_position.0][next_position.1] == 'v'
+                    && self.rows[next_position.0][next_position.1 + 1] == '#'
+                {
+                    if self.fork {
+                        panic!("We are in the fork");
                     }
+                    return Reason::Looped;
                 }
             }
 
@@ -129,6 +155,13 @@ impl Laboratory {
 
     fn move_left(&mut self) -> Reason {
         loop {
+            if self.print {
+                print!("{}", self.to_image());
+            }
+            if self.fork {
+                println!("Move {:?}", self.moves);
+                self.moves += 1;
+            }
             if self.position.1 == 0 {
                 return Reason::FellOffMap;
             }
@@ -147,14 +180,15 @@ impl Laboratory {
                 if fork.run() == Reason::Looped {
                     self.obstructions.insert(next_position);
                 }
-            } else {
-                // We are in the fork.
-                if next_position.1 > 0 {
-                    if self.rows[next_position.0][next_position.1] == '^'
-                        && self.rows[next_position.0][next_position.1 - 1] == '#'
-                    {
-                        return Reason::Looped;
+            }
+            if next_position.1 > 0 {
+                if self.rows[next_position.0][next_position.1] == '^'
+                    && self.rows[next_position.0][next_position.1 - 1] == '#'
+                {
+                    if self.fork {
+                        panic!("We are in the fork");
                     }
+                    return Reason::Looped;
                 }
             }
 
@@ -166,6 +200,13 @@ impl Laboratory {
 
     fn move_down(&mut self) -> Reason {
         loop {
+            if self.print {
+                print!("{}", self.to_image());
+            }
+            if self.fork {
+                println!("Move {:?}", self.moves);
+                self.moves += 1;
+            }
             if self.position.0 == self.rows.len() - 1 {
                 return Reason::FellOffMap;
             }
@@ -184,14 +225,15 @@ impl Laboratory {
                 if fork.run() == Reason::Looped {
                     self.obstructions.insert(next_position);
                 }
-            } else {
-                // We are in the fork.
-                if next_position.0 + 1 < self.rows.len() {
-                    if self.rows[next_position.0][next_position.1] == '<'
-                        && self.rows[next_position.0 + 1][next_position.1] == '#'
-                    {
-                        return Reason::Looped;
+            }
+            if next_position.0 + 1 < self.rows.len() {
+                if self.rows[next_position.0][next_position.1] == '<'
+                    && self.rows[next_position.0 + 1][next_position.1] == '#'
+                {
+                    if self.fork {
+                        panic!("We are in the fork");
                     }
+                    return Reason::Looped;
                 }
             }
 
