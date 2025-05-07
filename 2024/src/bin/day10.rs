@@ -101,8 +101,58 @@ fn part_one(s: &String) -> u32 {
         .sum()
 }
 
-fn part_two(s: &str) -> u32 {
-    2
+// Add all 9s that can be reached from pos to set.
+fn score_from2<'a>(pos: Position<'a>, vector: &mut Vec<Position<'a>>) {
+    let (row, col) = pos.row_col;
+    let c = pos
+        .map
+        .lines()
+        .nth(row as usize)
+        .unwrap()
+        .chars()
+        .nth(col as usize)
+        .unwrap();
+
+    if c == '9' {
+        vector.push(pos);
+        return;
+    }
+
+    // up, down, left and right
+    for _move in [(-1, 0), (1, 0), (0, -1), (0, 1)] {
+        let new_pos: Position<'a> = Position {
+            map: pos.map,
+            row_col: (row + _move.0, col + _move.1),
+        };
+        if in_bounds(&new_pos) {
+            let new_c = new_pos
+                .map
+                .lines()
+                .nth(new_pos.row_col.0 as usize)
+                .unwrap()
+                .chars()
+                .nth(new_pos.row_col.1 as usize)
+                .unwrap()
+                .to_digit(10)
+                .unwrap();
+            let old_c = c.to_digit(10).unwrap();
+            if new_c == (old_c + 1) {
+                score_from2(new_pos, vector);
+            }
+        }
+    }
+}
+
+fn part_two(s: &String) -> u32 {
+    find_trailheads(s)
+        .iter()
+        .map(|x| {
+            let mut vector = Vec::new();
+            score_from2(x.clone(), &mut vector);
+            vector
+        })
+        .map(|x| x.len() as u32)
+        .sum()
 }
 
 #[cfg(test)]
@@ -194,9 +244,22 @@ mod tests {
     }
 
     #[test]
+    fn test_score_from2() {
+        let input = example_input("10");
+        let trailhead = Position {
+            map: &input,
+            row_col: (0, 2),
+        };
+        let mut result = Vec::new();
+        score_from2(trailhead, &mut result);
+
+        // Todo We expect the result to be a HashSet of positions
+        assert_eq!(result.len(), 20);
+    }
+
+    #[test]
     fn test_part_two() {
-        return;
         let result = part_two(&example_input("10"));
-        assert_eq!(result, 0);
+        assert_eq!(result, 81);
     }
 }
