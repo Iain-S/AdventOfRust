@@ -1,5 +1,17 @@
 use std::fs::read_to_string;
 
+// A test macro that doesn't panic.
+#[macro_export]
+macro_rules! compare {
+    ($result:expr, $expected:expr) => {
+        if $result != $expected {
+            Err(format!("Expected {}, got {}", $expected, $result))
+        } else {
+            Ok(())
+        }
+    };
+}
+
 #[allow(dead_code)]
 pub(crate) fn example_input(day: &str) -> String {
     let result = read_to_string("example/".to_string() + day + ".txt").unwrap();
